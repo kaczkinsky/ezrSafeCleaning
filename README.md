@@ -1,2 +1,2 @@
 # ezrSafeCleaning
-A safe eraser of hard drive and file using Gutmann algorithm
+A safe eraser of hard drive and/or files using Gutmann algorithm
