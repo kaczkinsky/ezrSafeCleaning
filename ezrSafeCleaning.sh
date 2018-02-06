@@ -11,6 +11,43 @@ then
 fi
 
 declare -a logfile="/var/log/ezrSafeCleaning.log"
+os=$(uname -a)
+set -- $os
+echo "Operating System :" $6
+
+# Try to detect coreutils pkg
+# If coreutils pkg is missing, installation of latest coreutils release for available os
+coreutils_detect=$(sudo find / -iname "coreutils" 2>/dev/null)
+
+if [[ $coreutils_detect ]]
+then
+  echo "Coreutils and its dependencies can be used on this OS"
+else
+  $6="$6"
+  if "$6" == "Debian"
+    then apt-get update; apt-get install -y coreutils
+  elif "$6" == "Fedora"
+    then yum install coreutils || dnf install coreutils
+  elif "$6" == "Gentoo"
+    then emerge --ask --verbose dev-vcs/coreutils
+  elif "$6" == "Arch Linux"
+    then pacman -S coreutils
+  elif "$6" == "openSUSE"
+    then zypper install coreutils
+  elif "$6" == "Free BSD"
+    then pkg install coreutils
+  elif "$6" == "Open BSD"
+    then pkg_add coreutils
+  elif "$6" == "Alpine"
+    then apk add coreutils
+  elif "$6" == "Tiny Core"
+    then tce-load -wi coreutils.tcz
+  fi
+fi
+
+# Clone coreutils repository (contains shred pkg) from github
+# coreutils_install=$(git clone https://github.com/wertarbyte/coreutils.git)
+# exec $coreutils_install
 
 # We try to know if a /dev/hda or /dev/sda is detected
 detect=$(ls -lh /dev/ | grep sda || grep hda)
@@ -39,7 +76,7 @@ then
   if [ "$val" == "$y" ]
   then
     # Exec shred rewriting random numbers and erase /dev/sdX
-    # Do a redirection from STDERR to STDOUT then the output of shred -v 
+    # Do a redirection from STDERR to STDOUT then the output of shred -v
     # is duplicate to /var/log/ezrSafeCleaning.log
     shred -vfz --random-source=/dev/urandom -n 70 -u $part 2>&1 | tee -a $logfile
     # // X[$part] O[file_which_contains_absolute_filenames]
