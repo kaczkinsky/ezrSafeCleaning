@@ -1,9 +1,5 @@
 #!/bin/bash
 
-######################   ***********************
-# ezrSafeCleaning.sh #  * MAINTAINER kaczkinsky *  #LiveInSafety ;)
-######################   ***********************
-
 if [ $USER != "root" ]
 then
   echo You must be root to run this program
@@ -15,8 +11,8 @@ os=$(uname -a)
 set -- $os
 echo "Operating System :" $6
 
-# Try to detect coreutils pkg
-# If coreutils pkg is missing, installation of latest coreutils release for available os
+# Try to detect coreutils pkg (contains shred.c)
+# If coreutils pkg is missing, run installation of latest coreutils release for available os
 coreutils_detect=$(sudo find / -iname "coreutils" 2>/dev/null)
 
 if [[ $coreutils_detect ]]
@@ -45,10 +41,6 @@ else
   fi
 fi
 
-# Clone coreutils repository (contains shred pkg) from github
-# coreutils_install=$(git clone https://github.com/wertarbyte/coreutils.git)
-# exec $coreutils_install
-
 # We try to know if a /dev/hda or /dev/sda is detected
 detect=$(ls -lh /dev/ | grep sda || grep hda)
 
@@ -60,35 +52,37 @@ else
   echo Hard drive is not detected
 fi
 
+# The following instructions are use to debug or test
+# Comments them to run properly the program on a hard drive
+touch /tmp/file.test
+ddir[0]="/tmp/file.test"; ddir[1]="/tmp/file.test"
+
 # We define the hard drive as $ddir
-#ddir[0]="/dev/sda*"; ddir[1]="/dev/hda*"
-ddir[0]="/home/kaczkinski/TEST/testfile"; ddir[1]="~/TEST/testfile"
-#echo ${ddir[0]} ${ddir[1]} # to use in debug
+# Uncomment the following line to run properly the program
+#ddir[0]="/dev/sda"; ddir[1]="/dev/hda"
 
 # We ask which data we want to be delete
 read -p "Inquire partition will be deleting : " part
 part="$part"
 if [ "${ddir[0]}" == "$part" ] || [ "${ddir[1]}" == "$part" ]
-#if true
+#if true # to use in debug or test
 then
   read -p "Confirm rewriting on disk ? [y/n] : " val
   y="y"
   if [ "$val" == "$y" ]
   then
     # Exec shred rewriting random numbers and erase /dev/sdX
-    # Do a redirection from STDERR to STDOUT then the output of shred -v
-    # is duplicate to /var/log/ezrSafeCleaning.log
-    shred -vfz --random-source=/dev/urandom -n 70 -u $part 2>&1 | tee -a $logfile
-    # // X[$part] O[file_which_contains_absolute_filenames]
-    echo "EXIT program"
+    # Do a redirection from STDERR to STDOUT
+    # The output of shred -v is duplicate to /var/log/ezrSafeCleaning.log
+    shred -vfz --random-source=/dev/urandom -n 8 -u $part 2>&1 | tee -a $logfile
     echo status ':' SUCCESS
-  else
     echo "EXIT program"
+  else
     echo status ':' DOWN
+    echo "EXIT program"
+    exit 2
   fi
-  echo OK
-  exit 0
-else
-  echo NOK
   exit 1
+else
+  exit 2
 fi

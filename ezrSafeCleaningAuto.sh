@@ -11,8 +11,8 @@ os=$(uname -a)
 set -- $os
 echo "Operating System:" $6
 
-# Try to detect coreutils pkg
-# If coreutils pkg is missing, installation of latest coreutils release for available os
+# Try to detect coreutils pkg (contains shred.c)
+# If coreutils pkg is missing, run installation of latest coreutils release for available os
 coreutils_detect=$(sudo find / -iname "coreutils" 2>/dev/null)
 
 if [[ $coreutils_detect ]]
@@ -52,16 +52,16 @@ else
   echo Hard drive is not detected
 fi
 
-# We define the hard drive as $ddir
-# Uncomment the following lines to run properly the program
-#ddir[0]="/dev/sda"; ddir[1]="/dev/hda"
-
-# the following instructions are use to debug or test
-# comments them to run properly the program on a hard drive
+# The following instructions are use to debug or test
+# Comments them to run properly the program on a hard drive
 touch /tmp/file.test
 ddir[0]="/tmp/file.test"; ddir[1]="/tmp/file.test"
 
-# Exec shred rewriting random numbers and erase /dev/sdX
+# We define the hard drive as $ddir
+# Uncomment the following line to run properly the program
+#ddir[0]="/dev/sda"; ddir[1]="/dev/hda"
+
+# Exec shred rewriting random numbers and erase /dev/sd?
 # Do a redirection from STDERR to STDOUT
 # The output of shred -v is duplicate to /var/log/ezrSafeCleaning.log
 if [[ "${ddir[0]}" || "${ddir[1]}" ]]
@@ -71,14 +71,12 @@ if [[ "${ddir[0]}" || "${ddir[1]}" ]]
     elif [[ "${ddir[1]}" ]]
       then shred -vfz --random-source=/dev/urandom -n 8 -u "${ddir[1]}" 2>&1 | tee -a $logfile
     fi
-  echo EXIT program
   echo status ':' SUCCESS
-  echo OK
+  echo EXIT program
   exit 1
 else
   echo Error happens
-  echo EXIT program
   echo status ':' DOWN
-  echo NOK
+  echo EXIT program
   exit 2
 fi
